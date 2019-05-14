@@ -8,6 +8,7 @@
  * PHONE   : 13811754531
  * WECHAT  : 13811754531
  * WEBSIT  : https://www.punkcoder.cn
+ * DESCRIPTION : 一个极简的全功能 PHP 微信开发包， 整个包只有一个文件，兼容老旧 PHP 项目，使用方便，快捷简单。
  */
 
 define('WECHAT_DEBUG', true); // 启用调试模式
