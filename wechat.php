@@ -14,6 +14,7 @@
 define('WECHAT_DEBUG', true); // 启用调试模式
 define('WECHAT_APPID', ''); // APPID 由微信公众平台获取
 define('WECHAT_SECRET', ''); // APP Secret 由微信公众平台获取
+define('WECHAT_TOKEN', ''); // Token 由微信公众平台自行填写
 define('WECHAT_ENCRYPT_TYPE', 0); // 0 => 明文, 1 => 兼容, 2 => 安全
 define('WECHAT_ENCODING_AESKEY', ''); // 若消息加密模式为 2, 则必须根据微信公众平台中所填内容来填写此项
 define('WECHAT_API_URL', 'api.weixin.qq.com'); // 微信接口域名
@@ -37,7 +38,6 @@ function wechat_util_http_get($url, $params)
 
 function wechat_util_http_post()
 {
-
 }
 
 function wecaht_util_get_api_url($api)
@@ -45,6 +45,14 @@ function wecaht_util_get_api_url($api)
     $format = '%1$s://%2$s%3$s';
     $url = sprintf($format, 'https', WECHAT_API_URL, $api);
     return $url;
+}
+
+function wechat_util_check_signature($signature, $timestamp, $nonce)
+{
+    $data = [WECHAT_TOKEN, $timestamp, $nonce];
+    sort($data, SORT_STRING);
+    $s = sha1(implode($data));
+    return $s == $signature;
 }
 
 function wechat_api_get_callback_ip_list($access_token)
