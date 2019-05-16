@@ -1,6 +1,6 @@
 <?php
 /**
- * PROJECT : wechat
+ * PROJECT : light-sdk
  * FILE    : wechat.php
  * TIME    : 2019/5/14 15:18
  * AUTHOR  : Younger Shen
