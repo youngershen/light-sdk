@@ -21,6 +21,89 @@ define('WECHAT_API_URL', 'api.weixin.qq.com'); // 微信接口域名
 define('WECHAT_APICLIENT_CERT_PATH', null); // 微信支付 CERT 证书路径
 define('WECHAT_APICLIENT_KEY_PATH', null); // 微信支付 KEY 路径
 
+/**
+ * @param array $args
+ * 该参数中必须包含 url 项， query 项可以为空
+ * @param array $curl_opts
+ * 该参数用来设置 curl 选项，依需求添加即可
+ * @return bool|string
+ * 若请求成功则返回字符串，失败怎返回 false
+ */
+function wechat_util_http_get($args, $curl_opts=null)
+{
+    $url = $args['url'];
+    $port = 80;
+
+    if(array_key_exists('query', $args))
+    {
+        $params = http_build_query($args['query']);
+        $url .= '?' . $params;
+    }
+
+    if(preg_match('/https/', $url, $match))
+    {
+        $port = 443;
+    }
+
+    $opts = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_PORT => $port
+    ];
+
+    if($curl_opts)
+    {
+        $opts = array_merge($opts, $curl_opts);
+    }
+
+    $ch = curl_init();
+    curl_setopt_array($ch, $opts);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return $response;
+}
+
+function wechat_util_http_post($args, $curl_opts=null)
+{
+    $url = $args['url'];
+    $port = 80;
+    $payload = null;
+
+    if(preg_match('/https/', $url, $match))
+    {
+        $port = 443;
+    }
+
+    if(preg_match(''))
+
+    if(key_exists('payload', $args))
+    {
+        $payload = http_build_query($payload);
+    }
+
+    $opts = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => false,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_PORT => $port
+    ];
+
+    if($curl_opts)
+    {
+        $opts = array_merge($opts, $curl_opts);
+    }
+
+    $ch = curl_init();
+    curl_setopt_array($ch, $opts);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    return $response;
+}
+
 function wechat_util_debug()
 {
 
@@ -29,15 +112,6 @@ function wechat_util_debug()
 function wechat_util_log()
 {
 
-}
-
-function wechat_util_http_get($url, $params)
-{
-    return null;
-}
-
-function wechat_util_http_post()
-{
 }
 
 function wecaht_util_get_api_url($api)
@@ -109,3 +183,4 @@ function wechat_api_facepay()
 }
 
 
+echo(wechat_util_http_post(['url' => 'http://localhost:8080']));
