@@ -7,13 +7,15 @@
  * EMAIL   : younger.x.shen@gmail.com
  * PHONE   : 13811754531
  * WECHAT  : 13811754531
- * WEBSIT  : https://www.punkcoder.cn
+ * WEBSIT  : https://github.com/youngershen/light-sdk
+ * LICENSE : https://opensource.org/licenses/MIT
+ * REQUIREMENTS: PHP 5.4 及以上版本， 所需扩展组件 curl
  * DESCRIPTION : 一个极简的全功能 PHP 微信开发包， 整个包只有一个文件，兼容老旧 PHP 项目，使用方便，快捷简单。
  */
 
 define('WECHAT_DEBUG', true); // 启用调试模式
-define('WECHAT_APPID', ''); // APPID 由微信公众平台获取
-define('WECHAT_SECRET', ''); // APP Secret 由微信公众平台获取
+define('WECHAT_APPID', 'wxcd18413123e1fff5'); // APPID 由微信公众平台获取
+define('WECHAT_SECRET', 'a5435a82a733b4fbaae60a3ab901f403'); // APP Secret 由微信公众平台获取
 define('WECHAT_TOKEN', ''); // Token 由微信公众平台自行填写
 define('WECHAT_ENCRYPT_TYPE', 0); // 0 => 明文, 1 => 兼容, 2 => 安全
 define('WECHAT_ENCODING_AESKEY', ''); // 若消息加密模式为 2, 则必须根据微信公众平台中所填内容来填写此项
@@ -22,86 +24,37 @@ define('WECHAT_APICLIENT_CERT_PATH', null); // 微信支付 CERT 证书路径
 define('WECHAT_APICLIENT_KEY_PATH', null); // 微信支付 KEY 路径
 
 /**
- * @param array $args
- * 该参数中必须包含 url 项， query 项可以为空
- * @param array $curl_opts
- * 该参数用来设置 curl 选项，依需求添加即可
+ * @param array $curl_options [可选]
+ * curl 的其他参数都可以传入，方便调用
  * @return bool|string
- * 若请求成功则返回字符串，失败怎返回 false
+ * 请求成功则返回字符串，否则返回 false， 默认开启 CURLOPT_RETURNTRANSFER
  */
-function wechat_util_http_get($args, $curl_opts=null)
+function wechat_util_curl($curl_options=null)
 {
-    $url = $args['url'];
-    $port = 80;
-
-    if(array_key_exists('query', $args))
-    {
-        $params = http_build_query($args['query']);
-        $url .= '?' . $params;
-    }
-
-    if(preg_match('/https/', $url, $match))
-    {
-        $port = 443;
-    }
-
-    $opts = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_PORT => $port
-    ];
-
-    if($curl_opts)
-    {
-        $opts = array_merge($opts, $curl_opts);
-    }
-
     $ch = curl_init();
-    curl_setopt_array($ch, $opts);
+    $curl_options = wechat_util_curl_options($curl_options);
+    curl_setopt_array($ch, $curl_options);
     $response = curl_exec($ch);
     curl_close($ch);
     return $response;
 }
 
-function wechat_util_http_post($args, $curl_opts=null)
+/**
+ * @param array $options
+ * 需要合并的额外 curl 参数， 将于默认参数合并后返回新的参数数组
+ * @return array
+ * 新的参数数组
+ */
+function wechat_util_curl_options($options)
 {
-    $url = $args['url'];
-    $port = 80;
-    $payload = null;
-
-    if(preg_match('/https/', $url, $match))
-    {
-        $port = 443;
-    }
-
-    if(preg_match(''))
-
-    if(key_exists('payload', $args))
-    {
-        $payload = http_build_query($payload);
-    }
-
-    $opts = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => false,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
+    $default = [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_PORT => $port
+        CURLOPT_PORT => 443,
+        CURLOPT_CONNECTTIMEOUT => 6,
+        CURLOPT_TIMEOUT => 8
     ];
 
-    if($curl_opts)
-    {
-        $opts = array_merge($opts, $curl_opts);
-    }
-
-    $ch = curl_init();
-    curl_setopt_array($ch, $opts);
-    $response = curl_exec($ch);
-    curl_close($ch);
-
-    return $response;
+    return array_replace($default, $options);
 }
 
 function wechat_util_debug()
@@ -114,10 +67,26 @@ function wechat_util_log()
 
 }
 
-function wecaht_util_get_api_url($api)
+
+/**
+ * @param string $api
+ * 微信接口的 end point
+ * @param array $params [optional]
+ * 可选的 query 参数 方便一些 get 请求
+ * @return string
+ * 返回拼装好之后的 URL
+ */
+function wechat_util_get_api_url($api, $params=null)
 {
     $format = '%1$s://%2$s%3$s';
     $url = sprintf($format, 'https', WECHAT_API_URL, $api);
+
+    if($params)
+    {
+        $query = http_build_query($params);
+        $url =  $url . '?' . $query;
+    }
+
     return $url;
 }
 
@@ -129,11 +98,39 @@ function wechat_util_check_signature($signature, $timestamp, $nonce)
     return $s == $signature;
 }
 
+/**
+ * @param string $access_token
+ * 可用的 access token
+ * @return string|bool
+ * 成功则返回 json 失败返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140187
+ * 该方法用来获取微信服务器的 ip 地址, 详细参见 link
+ */
 function wechat_api_get_callback_ip_list($access_token)
 {
+    $params = [
+        'access_token' => $access_token
+    ];
 
+    $url = wechat_util_get_api_url('/cgi-bin/getcallbackip', $params);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => true,
+    ];
+
+    $response = wechat_util_curl($options);
+    $json = json_decode($response, true);
+    return $json;
 }
 
+
+/**
+ * 获取微信 access_token
+ * @return bool|string
+ * 成功色返回字符串，失败则返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
+ */
 function wechat_api_get_access_token()
 {
     $params = [
@@ -142,9 +139,16 @@ function wechat_api_get_access_token()
         'secret' => WECHAT_SECRET
     ];
 
-    $url = wecaht_util_get_api_url('/cgi-bin/token');
-    $response = wechat_util_http_get($url, $params);
-    return $response;
+    $url = wechat_util_get_api_url('/cgi-bin/token', $params);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => true,
+    ];
+
+    $response = wechat_util_curl($options);
+    $json = json_decode($response, true);
+    return $json;
 }
 
 function wechat_api_micropay()
@@ -183,4 +187,6 @@ function wechat_api_facepay()
 }
 
 
-echo(wechat_util_http_post(['url' => 'http://localhost:8080']));
+$token = wechat_api_get_access_token();
+$ip = wechat_api_get_callback_ip_list($token['access_token']);
+var_dump($ip);
