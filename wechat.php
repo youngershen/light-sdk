@@ -61,9 +61,12 @@ function light_sdk_wechat_util_curl_options($options)
     return array_replace($default, $options);
 }
 
-function light_sdk_wechat_util_debug()
+function light_sdk_wechat_util_debug($message)
 {
-
+    if(LIGHT_SDK_WECHAT_DEBUG)
+    {
+        light_sdk_wechat_util_log($message);
+    }
 }
 
 function light_sdk_wechat_util_log($message)
@@ -71,7 +74,6 @@ function light_sdk_wechat_util_log($message)
     $message = $message . PHP_EOL;
     error_log($message, 3, LIGHT_SDK_LOG);
 }
-
 
 /**
  * @param string $api
@@ -129,7 +131,6 @@ function light_sdk_wechat_api_get_callback_ip_list($access_token)
     return $json;
 }
 
-
 /**
  * 获取微信 access_token
  * @return bool|string
@@ -152,6 +153,32 @@ function light_sdk_wechat_api_get_access_token()
     ];
 
     $response = light_sdk_wechat_util_curl($options);
+    $json = json_decode($response, true);
+    return $json;
+}
+
+/**
+ * @param array $payload
+ * @param string $access_token
+ * @return string|bool
+ * @link https://api.weixin.qq.com/cgi-bin/menu/create?access_token=ACCESS_TOKEN
+ */
+function light_sdk_wechat_api_menu_create($access_token, $payload)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/create', ['access_token' => $access_token]);
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+    light_sdk_wechat_util_debug($url);
+    light_sdk_wechat_util_debug($payload);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload
+    ];
+
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
