@@ -159,9 +159,13 @@ function light_sdk_wechat_api_get_access_token()
 
 /**
  * @param array $payload
+ * 自定义菜单数组，具体格式参见微信官方的文档
  * @param string $access_token
+ * 有效的 access_token
  * @return string|bool
- * @link https://api.weixin.qq.com/cgi-bin/menu/create?access_token=ACCESS_TOKEN
+ * 调用成功则返回微信返回的字符串，失败则返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141013
+ * 该接口用于创建微信公众号菜单，详情参见微信官方文档
  */
 function light_sdk_wechat_api_menu_create($access_token, $payload)
 {
@@ -175,6 +179,52 @@ function light_sdk_wechat_api_menu_create($access_token, $payload)
         CURLOPT_URL => $url,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $payload
+    ];
+
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
+    $json = json_decode($response, true);
+    return $json;
+}
+
+/**
+ * @param string $access_token
+ * 有效的 access_token
+ * @return mixed
+ * 调用成功则返回具体的菜单信息，否则返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141014
+ * 该函数用于获取公众号的菜单，详情参见官方文档
+ */
+function light_sdk_wechat_api_menu_get($access_token)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/get', ['access_token' => $access_token]);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => true,
+    ];
+
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
+    $json = json_decode($response, true);
+    return $json;
+}
+
+/**
+ * @param string $access_token
+ * 有效的 access_token
+ * @return mixed
+ * 调用成功则返回删除成功的提示信息，否则返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141015
+ * 该函数用于删除公众号菜单，详情参见官方文档
+ */
+function light_sdk_wechat_api_menu_delete($access_token)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/delete', ['access_token' => $access_token]);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => true,
     ];
 
     $response = light_sdk_wechat_util_curl($options);
