@@ -232,3 +232,90 @@ function light_sdk_wechat_api_menu_delete($access_token)
     $json = json_decode($response, true);
     return $json;
 }
+
+function light_sdk_wechat_api_menu_addconditional($access_token, $payload)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+    light_sdk_wechat_util_debug($url);
+    light_sdk_wechat_util_debug($payload);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload
+    ];
+
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
+    $json = json_decode($response, true);
+    return $json;
+}
+
+function light_sdk_wechat_api_menu_delconditional($access_token, $menu_id)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/delconditional', ['access_token' => $access_token]);
+    $payload = ['menuid' => $menu_id];
+
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+    light_sdk_wechat_util_debug($url);
+    light_sdk_wechat_util_debug($payload);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload
+    ];
+
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
+    $json = json_decode($response, true);
+    return $json;
+}
+
+function light_sdk_wechat_api_menu_trymatch($access_token, $user_id)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/trymatch', ['access_token' => $access_token]);
+    $payload = ['user_id' => $user_id];
+
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+    light_sdk_wechat_util_debug($url);
+    light_sdk_wechat_util_debug($payload);
+
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload
+    ];
+
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
+    $json = json_decode($response, true);
+    return $json;
+}
+
+
+$token = light_sdk_wechat_api_get_access_token()['access_token'];
+
+$payload = [
+    "button" => [
+        [
+            "type" => "click",
+            "name" =>  "今日歌曲",
+            "key" => "V1001_TODAY_MUSIC"
+        ]
+    ],
+    "matchrule" => [
+        "language" => "zh_CN"
+    ]
+];
+
+$r = light_sdk_wechat_api_menu_trymatch($token, 'younger-the-guy');
+
+//$r = light_sdk_wechat_api_menu_addconditional($token, $payload);
+
+
+var_dump($r);
