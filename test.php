@@ -10,4 +10,4 @@
  * WEBSIT  : https://www.punkcoder.cn
  */
  
- echo($_POST);
+ echo('test');

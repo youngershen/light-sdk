@@ -233,6 +233,17 @@ function light_sdk_wechat_api_menu_delete($access_token)
     return $json;
 }
 
+
+/**
+ * @param string $access_token
+ * 有效的 acess_token
+ * @param array $payload
+ * 菜单创建详情， 参见官方文档
+ * @return mixed
+ * 正确时的返回JSON数据包如下，错误时的返回码请见接口返回码说明。
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
+ * 该函数用于创建个性化菜单， 详情参见官方文档
+ */
 function light_sdk_wechat_api_menu_addconditional($access_token, $payload)
 {
     $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
@@ -253,6 +264,16 @@ function light_sdk_wechat_api_menu_addconditional($access_token, $payload)
     return $json;
 }
 
+/**
+ * @param string $access_token
+ * 有效的 access_token
+ * @param string $menu_id
+ * 要删除的 menu id
+ * @return mixed
+ * 返回参见官方文档
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
+ * 改函数用于删除个性化菜单, 详情参见官方文档
+ */
 function light_sdk_wechat_api_menu_delconditional($access_token, $menu_id)
 {
     $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/delconditional', ['access_token' => $access_token]);
@@ -275,6 +296,17 @@ function light_sdk_wechat_api_menu_delconditional($access_token, $menu_id)
     return $json;
 }
 
+
+/**
+ * @param string $access_token
+ * 可用的 access_token
+ * @param string $user_id
+ * 用户 user id
+ * @return mixed
+ * 返回参见文档
+ * @Link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
+ * 该函数用户测试匹配个性化菜单，详情参见官方文档
+ */
 function light_sdk_wechat_api_menu_trymatch($access_token, $user_id)
 {
     $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/trymatch', ['access_token' => $access_token]);
@@ -298,24 +330,25 @@ function light_sdk_wechat_api_menu_trymatch($access_token, $user_id)
 }
 
 
-$token = light_sdk_wechat_api_get_access_token()['access_token'];
+/**
+ * @param string $access_token
+ * 有效的 access_token
+ * @return mixed
+ * 调用成功则返回自定义菜单的 json 数据，否则返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1434698695
+ * 该函数用于获取自定义菜单信息，详情参见官方文档
+ */
+function light_sdk_wechat_api_get_current_selfmenu_info($access_token)
+{
+    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/get_current_selfmenu_info', ['access_token' => $access_token]);
 
-$payload = [
-    "button" => [
-        [
-            "type" => "click",
-            "name" =>  "今日歌曲",
-            "key" => "V1001_TODAY_MUSIC"
-        ]
-    ],
-    "matchrule" => [
-        "language" => "zh_CN"
-    ]
-];
+    $options = [
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPGET => true,
+    ];
 
-$r = light_sdk_wechat_api_menu_trymatch($token, 'younger-the-guy');
-
-//$r = light_sdk_wechat_api_menu_addconditional($token, $payload);
-
-
-var_dump($r);
+    $response = light_sdk_wechat_util_curl($options);
+    light_sdk_wechat_util_debug($response);
+    $json = json_decode($response, true);
+    return $json;
+}
