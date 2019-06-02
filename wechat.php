@@ -351,4 +351,5 @@ function light_sdk_wechat_api_get_current_selfmenu_info($access_token)
     light_sdk_wechat_util_debug($response);
     $json = json_decode($response, true);
     return $json;
+    
 }
