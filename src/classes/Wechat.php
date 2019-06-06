@@ -18,12 +18,18 @@ class Wechat
     private $appId;
     private $appSecret;
     private $token;
+    private $encryptType;
+    private $encodingAeskey;
+    private $apiUrl;
 
-    public function __construct($appId, $appSecret, $token, $debug=false)
+    public function __construct($appId, $appSecret, $token, $encryptType, $encodingAeskey, $apiUrl='api.weixin.qq.com', $debug=false)
     {
         $this->appId = $appId;
         $this->appSecret = $appSecret;
         $this->token = $token;
+        $this->encryptType = $encryptType;
+        $this->encodingAeskey = $encodingAeskey;
+        $this->apiUrl = $apiUrl;
         $this->debug = $debug;
     }
 }
