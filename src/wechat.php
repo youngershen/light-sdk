@@ -27,16 +27,23 @@ define('LIGHT_SDK_WECHAT_VERSION', '0.1a');
 define('LIGHT_SDK_BASE_DIR', dirname(__FILE__));
 define('LIGHT_SDK_LOG', LIGHT_SDK_BASE_DIR . DIRECTORY_SEPARATOR . 'debug.log');
 
+
+function request($options=null)
+{
+    return curl($options);
+}
+
+
 /**
  * @param array $curl_options [可选]
  * curl 的其他参数都可以传入，方便调用
  * @return bool|string
  * 请求成功则返回字符串，否则返回 false， 默认开启 CURLOPT_RETURNTRANSFER
  */
-function light_sdk_wechat_util_curl($curl_options=null)
+function curl($curl_options=null)
 {
     $ch = curl_init();
-    $curl_options = light_sdk_wechat_util_curl_options($curl_options);
+    $curl_options = get_curl_options($curl_options);
     curl_setopt_array($ch, $curl_options);
     $response = curl_exec($ch);
     curl_close($ch);
@@ -49,7 +56,7 @@ function light_sdk_wechat_util_curl($curl_options=null)
  * @return array
  * 新的参数数组
  */
-function light_sdk_wechat_util_curl_options($options)
+function get_curl_options($options)
 {
     $default = [
         CURLOPT_RETURNTRANSFER => true,
@@ -61,15 +68,15 @@ function light_sdk_wechat_util_curl_options($options)
     return array_replace($default, $options);
 }
 
-function light_sdk_wechat_util_debug($message)
+function debug($message)
 {
     if(LIGHT_SDK_WECHAT_DEBUG)
     {
-        light_sdk_wechat_util_log($message);
+        log($message);
     }
 }
 
-function light_sdk_wechat_util_log($message)
+function log($message)
 {
     $message = $message . PHP_EOL;
     error_log($message, 3, LIGHT_SDK_LOG);
@@ -83,7 +90,7 @@ function light_sdk_wechat_util_log($message)
  * @return string
  * 返回拼装好之后的 URL
  */
-function light_sdk_wechat_util_get_api_url($api, $params=null)
+function get_api_url($api, $params=null)
 {
     $format = '%1$s://%2$s%3$s';
     $url = sprintf($format, 'https', LIGHT_SDK_WECHAT_API_URL, $api);
@@ -97,7 +104,7 @@ function light_sdk_wechat_util_get_api_url($api, $params=null)
     return $url;
 }
 
-function light_sdk_wechat_util_check_signature($signature, $timestamp, $nonce)
+function check_signature($signature, $timestamp, $nonce)
 {
     $data = [LIGHT_SDK_WECHAT_TOKEN, $timestamp, $nonce];
     sort($data, SORT_STRING);
@@ -113,20 +120,20 @@ function light_sdk_wechat_util_check_signature($signature, $timestamp, $nonce)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140187
  * 该方法用来获取微信服务器的 ip 地址, 详细参见 link
  */
-function light_sdk_wechat_api_get_callback_ip_list($access_token)
+function get_callback_ip_list($access_token)
 {
     $params = [
         'access_token' => $access_token
     ];
 
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/getcallbackip', $params);
+    $url = get_api_url('/cgi-bin/getcallbackip', $params);
 
     $options = [
         CURLOPT_URL => $url,
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
+    $response = request($options);
     $json = json_decode($response, true);
     return $json;
 }
@@ -137,7 +144,7 @@ function light_sdk_wechat_api_get_callback_ip_list($access_token)
  * 成功色返回字符串，失败则返回 false
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
  */
-function light_sdk_wechat_api_get_access_token()
+function get_access_token_api()
 {
     $params = [
         'grant_type' => 'client_credential',
@@ -145,14 +152,14 @@ function light_sdk_wechat_api_get_access_token()
         'secret' => LIGHT_SDK_WECHAT_SECRET
     ];
 
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/token', $params);
+    $url = get_api_url('/cgi-bin/token', $params);
 
     $options = [
         CURLOPT_URL => $url,
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
+    $response = request($options);
     $json = json_decode($response, true);
     return $json;
 }
@@ -167,13 +174,13 @@ function light_sdk_wechat_api_get_access_token()
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141013
  * 该接口用于创建微信公众号菜单，详情参见微信官方文档
  */
-function light_sdk_wechat_api_menu_create($access_token, $payload)
+function menu_create($access_token, $payload)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/create', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/menu/create', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    light_sdk_wechat_util_debug($url);
-    light_sdk_wechat_util_debug($payload);
+    debug($url);
+    debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -181,8 +188,8 @@ function light_sdk_wechat_api_menu_create($access_token, $payload)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -195,17 +202,17 @@ function light_sdk_wechat_api_menu_create($access_token, $payload)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141014
  * 该函数用于获取公众号的菜单，详情参见官方文档
  */
-function light_sdk_wechat_api_menu_get($access_token)
+function menu_get($access_token)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/get', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/menu/get', ['access_token' => $access_token]);
 
     $options = [
         CURLOPT_URL => $url,
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -218,17 +225,17 @@ function light_sdk_wechat_api_menu_get($access_token)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141015
  * 该函数用于删除公众号菜单，详情参见官方文档
  */
-function light_sdk_wechat_api_menu_delete($access_token)
+function menu_delete($access_token)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/delete', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/menu/delete', ['access_token' => $access_token]);
 
     $options = [
         CURLOPT_URL => $url,
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -244,13 +251,13 @@ function light_sdk_wechat_api_menu_delete($access_token)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
  * 该函数用于创建个性化菜单， 详情参见官方文档
  */
-function light_sdk_wechat_api_menu_addconditional($access_token, $payload)
+function menu_addconditional($access_token, $payload)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    light_sdk_wechat_util_debug($url);
-    light_sdk_wechat_util_debug($payload);
+    debug($url);
+    debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -258,8 +265,8 @@ function light_sdk_wechat_api_menu_addconditional($access_token, $payload)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -274,15 +281,15 @@ function light_sdk_wechat_api_menu_addconditional($access_token, $payload)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
  * 改函数用于删除个性化菜单, 详情参见官方文档
  */
-function light_sdk_wechat_api_menu_delconditional($access_token, $menu_id)
+function menu_delconditional_api($access_token, $menu_id)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/delconditional', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/menu/delconditional', ['access_token' => $access_token]);
     $payload = ['menuid' => $menu_id];
 
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    light_sdk_wechat_util_debug($url);
-    light_sdk_wechat_util_debug($payload);
+    debug($url);
+    debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -290,8 +297,8 @@ function light_sdk_wechat_api_menu_delconditional($access_token, $menu_id)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -307,15 +314,15 @@ function light_sdk_wechat_api_menu_delconditional($access_token, $menu_id)
  * @Link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
  * 该函数用户测试匹配个性化菜单，详情参见官方文档
  */
-function light_sdk_wechat_api_menu_trymatch($access_token, $user_id)
+function menu_trymatch($access_token, $user_id)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/menu/trymatch', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/menu/trymatch', ['access_token' => $access_token]);
     $payload = ['user_id' => $user_id];
 
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    light_sdk_wechat_util_debug($url);
-    light_sdk_wechat_util_debug($payload);
+    debug($url);
+    debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -323,8 +330,8 @@ function light_sdk_wechat_api_menu_trymatch($access_token, $user_id)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -338,18 +345,17 @@ function light_sdk_wechat_api_menu_trymatch($access_token, $user_id)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1434698695
  * 该函数用于获取自定义菜单信息，详情参见官方文档
  */
-function light_sdk_wechat_api_get_current_selfmenu_info($access_token)
+function get_current_selfmenu_info($access_token)
 {
-    $url = light_sdk_wechat_util_get_api_url('/cgi-bin/get_current_selfmenu_info', ['access_token' => $access_token]);
+    $url = get_api_url('/cgi-bin/get_current_selfmenu_info', ['access_token' => $access_token]);
 
     $options = [
         CURLOPT_URL => $url,
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = light_sdk_wechat_util_curl($options);
-    light_sdk_wechat_util_debug($response);
+    $response = request($options);
+    debug($response);
     $json = json_decode($response, true);
     return $json;
-    
 }
