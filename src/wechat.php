@@ -13,17 +13,17 @@
  * DESCRIPTION : 一个极简的全功能 PHP 微信开发包， 整个包只有一个文件，兼容老旧 PHP 项目，使用方便，快捷简单。
  */
 
-define('LIGHT_SDK_WECHAT_DEBUG', true); // 启用调试模式
-define('LIGHT_SDK_WECHAT_APPID', 'wxcd18413123e1fff5'); // APPID 由微信公众平台获取
-define('LIGHT_SDK_WECHAT_SECRET', 'a5435a82a733b4fbaae60a3ab901f403'); // APP Secret 由微信公众平台获取
-define('LIGHT_SDK_WECHAT_TOKEN', ''); // Token 由微信公众平台自行填写
-define('LIGHT_SDK_WECHAT_ENCRYPT_TYPE', 0); // 0 => 明文, 1 => 兼容, 2 => 安全
-define('LIGHT_SDK_WECHAT_ENCODING_AESKEY', ''); // 若消息加密模式为 2, 则必须根据微信公众平台中所填内容来填写此项
-define('LIGHT_SDK_WECHAT_API_URL', 'api.weixin.qq.com'); // 微信接口域名
-define('LIGHT_SDK_WECHAT_APICLIENT_CERT_PATH', null); // 微信支付 CERT 证书路径
-define('LIGHT_SDK_WECHAT_APICLIENT_KEY_PATH', null); // 微信支付 KEY 路径
+define('WECHAT_DEBUG', true); // 启用调试模式
+define('WECHAT_APPID', 'wxcd18413123e1fff5'); // APPID 由微信公众平台获取
+define('WECHAT_SECRET', 'a5435a82a733b4fbaae60a3ab901f403'); // APP Secret 由微信公众平台获取
+define('WECHAT_TOKEN', ''); // Token 由微信公众平台自行填写
+define('WECHAT_ENCRYPT_TYPE', 0); // 0 => 明文, 1 => 兼容, 2 => 安全
+define('WECHAT_ENCODING_AESKEY', ''); // 若消息加密模式为 2, 则必须根据微信公众平台中所填内容来填写此项
+define('WECHAT_API_URL', 'api.weixin.qq.com'); // 微信接口域名
+define('WECHAT_APICLIENT_CERT_PATH', null); // 微信支付 CERT 证书路径
+define('WECHAT_APICLIENT_KEY_PATH', null); // 微信支付 KEY 路径
 
-define('LIGHT_SDK_WECHAT_VERSION', '0.1a');
+define('LIGHT_SDK_VERSION', '0.1a');
 define('LIGHT_SDK_BASE_DIR', dirname(__FILE__));
 define('LIGHT_SDK_LOG', LIGHT_SDK_BASE_DIR . DIRECTORY_SEPARATOR . 'debug.log');
 
@@ -70,7 +70,7 @@ function get_curl_options($options)
 
 function debug($message)
 {
-    if(LIGHT_SDK_WECHAT_DEBUG)
+    if(WECHAT_DEBUG)
     {
         log($message);
     }
@@ -93,7 +93,7 @@ function log($message)
 function get_api_url($api, $params=null)
 {
     $format = '%1$s://%2$s%3$s';
-    $url = sprintf($format, 'https', LIGHT_SDK_WECHAT_API_URL, $api);
+    $url = sprintf($format, 'https', WECHAT_API_URL, $api);
 
     if($params)
     {
@@ -106,7 +106,7 @@ function get_api_url($api, $params=null)
 
 function check_signature($signature, $timestamp, $nonce)
 {
-    $data = [LIGHT_SDK_WECHAT_TOKEN, $timestamp, $nonce];
+    $data = [WECHAT_TOKEN, $timestamp, $nonce];
     sort($data, SORT_STRING);
     $s = sha1(implode($data));
     return $s == $signature;
@@ -148,8 +148,8 @@ function get_access_token_api()
 {
     $params = [
         'grant_type' => 'client_credential',
-        'appid' => LIGHT_SDK_WECHAT_APPID,
-        'secret' => LIGHT_SDK_WECHAT_SECRET
+        'appid' => WECHAT_APPID,
+        'secret' => WECHAT_SECRET
     ];
 
     $url = get_api_url('/cgi-bin/token', $params);
