@@ -20,19 +20,69 @@ define('WECHAT_TOKEN', ''); // Token 由微信公众平台自行填写
 define('WECHAT_ENCRYPT_TYPE', 0); // 0 => 明文, 1 => 兼容, 2 => 安全
 define('WECHAT_ENCODING_AESKEY', ''); // 若消息加密模式为 2, 则必须根据微信公众平台中所填内容来填写此项
 define('WECHAT_API_URL', 'api.weixin.qq.com'); // 微信接口域名
-define('WECHAT_APICLIENT_CERT_PATH', null); // 微信支付 CERT 证书路径
-define('WECHAT_APICLIENT_KEY_PATH', null); // 微信支付 KEY 路径
+define('WECHAT_APICLIENT_CERT_PATH', ''); // 微信支付 CERT 证书路径
+define('WECHAT_APICLIENT_KEY_PATH', ''); // 微信支付 KEY 路径
 
-define('LIGHT_SDK_VERSION', '0.1a');
-define('LIGHT_SDK_BASE_DIR', dirname(__FILE__));
-define('LIGHT_SDK_LOG', LIGHT_SDK_BASE_DIR . DIRECTORY_SEPARATOR . 'debug.log');
+define('WECHAT_VERSION', '0.1a');
+define('WECHAT_DIR', dirname(__FILE__));
+define('WECHAT_LOG', WECHAT_DIR . DIRECTORY_SEPARATOR . 'debug.log');
 
 
-function request($options=null)
+function http_get($url, $connect_timeout=6, $timeout= 8, $params=null, $options=[], $json=true, $direct=false)
 {
-    return curl($options);
+    $options[CURLOPT_HTTPGET] = true;
+    $response = http_request($url, $params, $options, $direct, $json, $connect_timeout, $timeout);
+    return $response;
 }
 
+function http_post($url, $connect_timeout=6, $timeout= 8, $params=null, $payload=null, $options=[], $json=true, $direct=false)
+{
+    if($payload)
+    {
+        $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $options[CURLOPT_POSTFIELDS] = $payload;
+    }
+
+    $options[CURLOPT_POST] = true;
+    $response = http_request($url, $params, $options, $direct, $json, $connect_timeout, $timeout);
+    return $response;
+}
+
+/**
+ * @param string $url
+ * @param array $params
+ * @param bool $direct
+ * @param array|null $options [可选]
+ * @param bool $json
+ * @param integer $connect_timeout
+ * @param integer $timeout
+ * 为 curl 函数提供的别名
+ * @return bool|string
+ */
+function http_request($url, $params=null, $options=null, $direct=true, $json=true, $connect_timeout=6, $timeout= 8)
+{
+    if($direct)
+    {
+        $url = $url . '?' . http_build_query($params);
+    }
+    else
+    {
+        $url = $url . http_build_query($params);
+    }
+
+    $options[CURLOPT_URL] = $url;
+    $options[CURLOPT_CONNECTTIMEOUT] = $connect_timeout;
+    $options[CURLOPT_TIMEOUT] = $timeout;
+
+    $response = curl($options);
+
+    if($json)
+    {
+        $response = json_decode($response, true);
+    }
+
+    return $response;
+}
 
 /**
  * @param array $curl_options [可选]
@@ -68,7 +118,7 @@ function get_curl_options($options)
     return array_replace($default, $options);
 }
 
-function debug($message)
+function wechat_debug($message)
 {
     if(WECHAT_DEBUG)
     {
@@ -76,10 +126,10 @@ function debug($message)
     }
 }
 
-function log($message)
+function wechat_log($message)
 {
     $message = $message . PHP_EOL;
-    error_log($message, 3, LIGHT_SDK_LOG);
+    error_log($message, 3, WECHAT_LOG);
 }
 
 /**
@@ -144,7 +194,7 @@ function get_callback_ip_list($access_token)
  * 成功色返回字符串，失败则返回 false
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
  */
-function get_access_token_api()
+function access_token()
 {
     $params = [
         'grant_type' => 'client_credential',
@@ -179,8 +229,8 @@ function menu_create($access_token, $payload)
     $url = get_api_url('/cgi-bin/menu/create', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    debug($url);
-    debug($payload);
+    wechat_debug($url);
+    wechat_debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -189,7 +239,7 @@ function menu_create($access_token, $payload)
     ];
 
     $response = request($options);
-    debug($response);
+    wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -212,7 +262,7 @@ function menu_get($access_token)
     ];
 
     $response = request($options);
-    debug($response);
+    wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -235,7 +285,7 @@ function menu_delete($access_token)
     ];
 
     $response = request($options);
-    debug($response);
+    wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -256,8 +306,8 @@ function menu_addconditional($access_token, $payload)
     $url = get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    debug($url);
-    debug($payload);
+    wechat_debug($url);
+    wechat_debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -266,7 +316,7 @@ function menu_addconditional($access_token, $payload)
     ];
 
     $response = request($options);
-    debug($response);
+    wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -288,8 +338,8 @@ function menu_delconditional_api($access_token, $menu_id)
 
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    debug($url);
-    debug($payload);
+    wechat_debug($url);
+    wechat_debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -298,7 +348,7 @@ function menu_delconditional_api($access_token, $menu_id)
     ];
 
     $response = request($options);
-    debug($response);
+    wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
@@ -321,8 +371,8 @@ function menu_trymatch($access_token, $user_id)
 
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
-    debug($url);
-    debug($payload);
+    wechat_debug($url);
+    wechat_debug($payload);
 
     $options = [
         CURLOPT_URL => $url,
@@ -331,11 +381,10 @@ function menu_trymatch($access_token, $user_id)
     ];
 
     $response = request($options);
-    debug($response);
+    wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
 }
-
 
 /**
  * @param string $access_token
@@ -355,7 +404,9 @@ function get_current_selfmenu_info($access_token)
     ];
 
     $response = request($options);
-    debug($response);
     $json = json_decode($response, true);
     return $json;
 }
+
+
+echo('?'. http_build_query(['ss', 'a'=> 'a', 'b' => 'b'], 's', 'f'));
