@@ -183,7 +183,7 @@ function get_callback_ip_list($access_token)
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     $json = json_decode($response, true);
     return $json;
 }
@@ -209,7 +209,7 @@ function access_token()
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     $json = json_decode($response, true);
     return $json;
 }
@@ -238,7 +238,7 @@ function menu_create($access_token, $payload)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
@@ -261,7 +261,7 @@ function menu_get($access_token)
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
@@ -284,7 +284,7 @@ function menu_delete($access_token)
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
@@ -315,7 +315,7 @@ function menu_addconditional($access_token, $payload)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
@@ -347,7 +347,7 @@ function menu_delconditional_api($access_token, $menu_id)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
@@ -380,7 +380,7 @@ function menu_trymatch($access_token, $user_id)
         CURLOPT_POSTFIELDS => $payload
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     wechat_debug($response);
     $json = json_decode($response, true);
     return $json;
@@ -403,10 +403,7 @@ function get_current_selfmenu_info($access_token)
         CURLOPT_HTTPGET => true,
     ];
 
-    $response = request($options);
+    $response = http_request($options);
     $json = json_decode($response, true);
     return $json;
 }
-
-
-echo('?'. http_build_query(['ss', 'a'=> 'a', 'b' => 'b'], 's', 'f'));
