@@ -22,35 +22,28 @@ define('WECHAT_ENCODING_AESKEY', ''); // 若消息加密模式为 2, 则必须�
 define('WECHAT_API_URL', 'api.weixin.qq.com'); // 微信接口域名
 define('WECHAT_APICLIENT_CERT_PATH', ''); // 微信支付 CERT 证书路径
 define('WECHAT_APICLIENT_KEY_PATH', ''); // 微信支付 KEY 路径
-
 define('WECHAT_VERSION', '0.1a');
 define('WECHAT_DIR', dirname(__FILE__));
 define('WECHAT_LOG', WECHAT_DIR . DIRECTORY_SEPARATOR . 'debug.log');
 
-
-function http_get($url, $connect_timeout=6, $timeout= 8, $params=null, $options=[], $json=true, $direct=false)
+function http_get($url, $params=null, $options=[], $json=true, $direct=true, $connect_timeout=6, $timeout= 8)
 {
     $options[CURLOPT_HTTPGET] = true;
     $response = http_request($url, $params, $options, $direct, $json, $connect_timeout, $timeout);
     return $response;
 }
 
-function http_post($url, $connect_timeout=6, $timeout= 8, $params=null, $payload=null, $options=[], $json=true, $direct=false)
+function http_post($url, $payload=null, $options=[], $params=null, $json=true, $direct=true, $connect_timeout=6, $timeout=8)
 {
-    if($payload)
-    {
-        $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
-        $options[CURLOPT_POSTFIELDS] = $payload;
-    }
-
     $options[CURLOPT_POST] = true;
-    $response = http_request($url, $params, $options, $direct, $json, $connect_timeout, $timeout);
+    $response = http_request($url, $params, $payload, $options, $direct, $json, $connect_timeout, $timeout);
     return $response;
 }
 
 /**
  * @param string $url
  * @param array $params
+ * @param array $payload
  * @param bool $direct
  * @param array|null $options [可选]
  * @param bool $json
@@ -59,13 +52,14 @@ function http_post($url, $connect_timeout=6, $timeout= 8, $params=null, $payload
  * 为 curl 函数提供的别名
  * @return bool|string
  */
-function http_request($url, $params=null, $options=null, $direct=true, $json=true, $connect_timeout=6, $timeout= 8)
+function http_request($url, $params=null, $payload=null, $options=[], $direct=true, $json=true, $connect_timeout=6, $timeout=8)
 {
-    if($direct)
+    if($direct && $params)
     {
         $url = $url . '?' . http_build_query($params);
     }
-    else
+
+    else if($params)
     {
         $url = $url . http_build_query($params);
     }
@@ -74,6 +68,12 @@ function http_request($url, $params=null, $options=null, $direct=true, $json=tru
     $options[CURLOPT_CONNECTTIMEOUT] = $connect_timeout;
     $options[CURLOPT_TIMEOUT] = $timeout;
 
+    if($payload)
+    {
+        $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $options[CURLOPT_POSTFIELDS] = $payload;
+    }
+
     $response = curl($options);
 
     if($json)
@@ -81,6 +81,12 @@ function http_request($url, $params=null, $options=null, $direct=true, $json=tru
         $response = json_decode($response, true);
     }
 
+    if(WECHAT_DEBUG)
+    {
+        WECHAT_LOG($url);
+        WECHAT_LOG($params);
+        WECHAT_LOG($payload);
+    }
     return $response;
 }
 
@@ -178,14 +184,8 @@ function get_callback_ip_list($access_token)
 
     $url = get_api_url('/cgi-bin/getcallbackip', $params);
 
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => true,
-    ];
-
-    $response = http_request($options);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_get($url);
+    return $response;
 }
 
 /**
@@ -204,14 +204,8 @@ function get_access_token()
 
     $url = get_api_url('/cgi-bin/token', $params);
 
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => true,
-    ];
-
-    $response = http_request($options);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_get($url);
+    return $response;
 }
 
 /**
@@ -228,20 +222,8 @@ function crate_menu($access_token, $payload)
 {
     $url = get_api_url('/cgi-bin/menu/create', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
-
-    wechat_debug($url);
-    wechat_debug($payload);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload
-    ];
-
-    $response = http_request($options);
-    wechat_debug($response);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_post($url, $payload);
+    return $response;
 }
 
 /**
@@ -255,16 +237,8 @@ function crate_menu($access_token, $payload)
 function get_menu($access_token)
 {
     $url = get_api_url('/cgi-bin/menu/get', ['access_token' => $access_token]);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => true,
-    ];
-
-    $response = http_request($options);
-    wechat_debug($response);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_get($url);
+    return $response;
 }
 
 /**
@@ -278,18 +252,9 @@ function get_menu($access_token)
 function delete_menu($access_token)
 {
     $url = get_api_url('/cgi-bin/menu/delete', ['access_token' => $access_token]);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => true,
-    ];
-
-    $response = http_request($options);
-    wechat_debug($response);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_get($url);
+    return $response;
 }
-
 
 /**
  * @param string $access_token
@@ -305,20 +270,8 @@ function create_menu_conditional($access_token, $payload)
 {
     $url = get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
-
-    wechat_debug($url);
-    wechat_debug($payload);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload
-    ];
-
-    $response = http_request($options);
-    wechat_debug($response);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_post($url, $payload);
+    return $response;
 }
 
 /**
@@ -335,24 +288,10 @@ function delete_menu_conditional($access_token, $menu_id)
 {
     $url = get_api_url('/cgi-bin/menu/delconditional', ['access_token' => $access_token]);
     $payload = ['menuid' => $menu_id];
-
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
-
-    wechat_debug($url);
-    wechat_debug($payload);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload
-    ];
-
-    $response = http_request($options);
-    wechat_debug($response);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_post($url, $payload);
+    return $response;
 }
-
 
 /**
  * @param string $access_token
@@ -368,22 +307,9 @@ function trymatch_menu($access_token, $user_id)
 {
     $url = get_api_url('/cgi-bin/menu/trymatch', ['access_token' => $access_token]);
     $payload = ['user_id' => $user_id];
-
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
-
-    wechat_debug($url);
-    wechat_debug($payload);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload
-    ];
-
-    $response = http_request($options);
-    wechat_debug($response);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_post($url, $payload);
+    return $response;
 }
 
 /**
@@ -397,13 +323,6 @@ function trymatch_menu($access_token, $user_id)
 function get_current_selfmenu_info($access_token)
 {
     $url = get_api_url('/cgi-bin/get_current_selfmenu_info', ['access_token' => $access_token]);
-
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPGET => true,
-    ];
-
-    $response = http_request($options);
-    $json = json_decode($response, true);
-    return $json;
+    $response = http_get($url);
+    return $response;
 }
