@@ -194,7 +194,7 @@ function get_callback_ip_list($access_token)
  * 成功色返回字符串，失败则返回 false
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
  */
-function access_token()
+function get_access_token()
 {
     $params = [
         'grant_type' => 'client_credential',
@@ -224,7 +224,7 @@ function access_token()
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141013
  * 该接口用于创建微信公众号菜单，详情参见微信官方文档
  */
-function menu_create($access_token, $payload)
+function crate_menu($access_token, $payload)
 {
     $url = get_api_url('/cgi-bin/menu/create', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
@@ -252,7 +252,7 @@ function menu_create($access_token, $payload)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141014
  * 该函数用于获取公众号的菜单，详情参见官方文档
  */
-function menu_get($access_token)
+function get_menu($access_token)
 {
     $url = get_api_url('/cgi-bin/menu/get', ['access_token' => $access_token]);
 
@@ -275,7 +275,7 @@ function menu_get($access_token)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421141015
  * 该函数用于删除公众号菜单，详情参见官方文档
  */
-function menu_delete($access_token)
+function delete_menu($access_token)
 {
     $url = get_api_url('/cgi-bin/menu/delete', ['access_token' => $access_token]);
 
@@ -301,7 +301,7 @@ function menu_delete($access_token)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
  * 该函数用于创建个性化菜单， 详情参见官方文档
  */
-function menu_addconditional($access_token, $payload)
+function create_menu_conditional($access_token, $payload)
 {
     $url = get_api_url('/cgi-bin/menu/addconditional', ['access_token' => $access_token]);
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
@@ -331,7 +331,7 @@ function menu_addconditional($access_token, $payload)
  * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
  * 改函数用于删除个性化菜单, 详情参见官方文档
  */
-function menu_delconditional_api($access_token, $menu_id)
+function delete_menu_conditional($access_token, $menu_id)
 {
     $url = get_api_url('/cgi-bin/menu/delconditional', ['access_token' => $access_token]);
     $payload = ['menuid' => $menu_id];
@@ -364,7 +364,7 @@ function menu_delconditional_api($access_token, $menu_id)
  * @Link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1455782296
  * 该函数用户测试匹配个性化菜单，详情参见官方文档
  */
-function menu_trymatch($access_token, $user_id)
+function trymatch_menu($access_token, $user_id)
 {
     $url = get_api_url('/cgi-bin/menu/trymatch', ['access_token' => $access_token]);
     $payload = ['user_id' => $user_id];
