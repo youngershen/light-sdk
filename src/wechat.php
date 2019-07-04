@@ -208,6 +208,8 @@ function get_access_token()
     return $response;
 }
 
+/************************************* 自定义菜单接口 **********************************/
+
 /**
  * @param array $payload
  * 自定义菜单数组，具体格式参见微信官方的文档
@@ -324,5 +326,31 @@ function get_current_selfmenu_info($access_token)
 {
     $url = get_api_url('/cgi-bin/get_current_selfmenu_info', ['access_token' => $access_token]);
     $response = http_get($url);
+    return $response;
+}
+
+
+/************************************* 素材管理接口 **********************************/
+
+/**
+ * @param string $access_token
+ * 有效的 access_token
+ * @param string $type
+ * 要获取的媒体类型， 图片（image）、视频（video）、语音 （voice）、图文（news）
+ * @param int $offset optional
+ * 从全部素材的该偏移位置开始返回，0表示从第一个素材 返回， 改参数默认为 0.
+ * @param int $count optional
+ * 返回素材的数量，取值在 1 到 20 之间， 改参数默认为 10
+ * @return bool|string
+ * 调用成功则返回自定义菜单的 json 数据，否则返回 false
+ * @link https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1444738734
+ * 该函数用于获取永久素材列表，详情参见文档
+ */
+function get_material_list($access_token, $type, $offset=0, $count=10)
+{
+    $url = get_api_url('/cgi-bin/material/batchget_material', ['access_token' => $access_token]);
+    $payload = ['type' => $type, $offset => $offset, 'count' => $count];
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+    $response = http_post($url, $payload);
     return $response;
 }
